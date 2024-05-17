@@ -23,6 +23,7 @@ jobs:
         ENVIRONMENT: ${{ inputs.environment }}
         JOB_STATUS: ${{ job.status }}
       run: |
+        echo $JOB_STATUS
         COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
         COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
         COMMIT_URL="${{ github.event.head_commit.url }}"
