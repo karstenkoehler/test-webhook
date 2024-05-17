@@ -1,18 +1,64 @@
-name: MS Teams Deploy Card
+name: Post to Microsoft Teams
 
-on: [push]
+on: 
+  push:
+    branches:
+      - main
 
 jobs:
-  build:
-    name: My Webhook
+  post-message:
     runs-on: ubuntu-latest
-    environment: test
+
     steps:
-      - uses: actions/checkout@v2
-      # this is the new step
-      - uses: toko-bifrost/ms-teams-deploy-card@master #  or "./" if in a local set-up
-        if: always()
-        with:
-          github-token: ${{ github.token }}
-          webhook-uri: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
-      - run: sleep 10
+    - name: Checkout repository
+      uses: actions/checkout@v2
+
+    - name: Send message to MS Teams
+      env:
+        MS_HOOK_URL: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
+      run: |
+        COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
+        COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
+        COMMIT_URL="${{ github.event.head_commit.url }}"
+        REPO_URL="https://github.com/${{ github.repository }}"
+        RUN_ID="${{ github.run_id }}"
+        WORKFLOW_URL="$REPO_URL/actions/runs/$RUN_ID"
+        MESSAGE_PAYLOAD=$(cat <<EOF
+        {
+          "@type": "MessageCard",
+          "@context": "http://schema.org/extensions",
+          "summary": "New Commit to Main Branch",
+          "themeColor": "0076D7",
+          "title": "A new commit has been pushed to the main branch",
+          "sections": [
+            {
+              "activityTitle": "Commit by $COMMIT_AUTHOR",
+              "activitySubtitle": "$COMMIT_MESSAGE",
+              "activityImage": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
+              "facts": [
+                {
+                  "name": "Repository:",
+                  "value": "$REPO_URL"
+                },
+                {
+                  "name": "Commit:",
+                  "value": "[View Commit]($COMMIT_URL)"
+                }
+              ]
+            }
+          ],
+          "potentialAction": [
+            {
+              "@type": "OpenUri",
+              "name": "View Workflow",
+              "targets": [
+                { "os": "default", "uri": "$WORKFLOW_URL" }
+              ]
+            }
+          ]
+        }
+        EOF
+        )
+        curl -H "Content-Type: application/json" \
+             -d "$MESSAGE_PAYLOAD" \
+             $MS_HOOK_URL
