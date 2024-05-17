@@ -12,10 +12,16 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v2
-
+    - name: oops
+      run: exit 1
     - name: Send message to MS Teams
+      if: always()
       env:
         MS_HOOK_URL: ${{ secrets.MS_TEAMS_WEBHOOK_URI }}
+        SERVICE_NAME: ${{ inputs.service_name }}
+        SERVICE_VERSION: ${{ inputs.docker_tag}}
+        ENVIRONMENT: ${{ inputs.environment }}
+        JOB_STATUS: ${{ job.status }}
       run: |
         COMMIT_MESSAGE=$(git log -1 --pretty=format:"%s")
         COMMIT_AUTHOR=$(git log -1 --pretty=format:"%an")
@@ -23,16 +29,22 @@ jobs:
         REPO_URL="https://github.com/${{ github.repository }}"
         RUN_ID="${{ github.run_id }}"
         WORKFLOW_URL="$REPO_URL/actions/runs/$RUN_ID"
+        THEME_COLOR="0076D7" # Default to blue
+
+        if [[ "$JOB_STATUS" != "success" ]]; then
+          THEME_COLOR="FF0000" # Set to red if any job failed
+        fi
         MESSAGE_PAYLOAD=$(cat <<EOF
+
         {
           "@type": "MessageCard",
           "@context": "http://schema.org/extensions",
-          "summary": "New Commit to Main Branch",
+          "summary": "$ENVIRONMENT Deployment",
           "themeColor": "0076D7",
-          "title": "A new commit has been pushed to the main branch",
+          "title": "$SERVICE_NAME $SERVICE_VERSION has been deployed to $ENVIRONMENT",
           "sections": [
             {
-              "activityTitle": "Commit by $COMMIT_AUTHOR",
+              "activityTitle": "Last commit by $COMMIT_AUTHOR",
               "activitySubtitle": "$COMMIT_MESSAGE",
               "activityImage": "https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png",
               "facts": [
