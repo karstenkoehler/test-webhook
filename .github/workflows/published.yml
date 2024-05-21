@@ -1,0 +1,10 @@
+on:
+  release:
+    types: [published]
+
+jobs:
+  post-message:
+    runs-on: ubuntu-latest
+    steps:
+    - name: echo
+      run: echo "published"
