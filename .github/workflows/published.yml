@@ -1,10 +1,15 @@
 on:
-  release:
-    types: [published]
+  push:
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+
 
 jobs:
-  post-message:
+  create-release:
+    name: Create Release
     runs-on: ubuntu-latest
-    steps:
-    - name: echo
-      run: echo "published"
+    permissions:
+      contents: read
+      id-token: write
+    run: |
+      gh release create ${{ github.ref_name }} --generate-notes --prerelease --verify-tag 
+
