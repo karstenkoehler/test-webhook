@@ -13,6 +13,8 @@ jobs:
     env: 
       GH_TOKEN: ${{ github.token }}
     steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
       - name: run
         run: |
           gh release create ${{ github.ref_name }} --generate-notes --prerelease --verify-tag 
