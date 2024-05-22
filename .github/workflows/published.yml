@@ -1,15 +1,24 @@
 on:
   push:
-    tags:
-      - v[0-9]+.[0-9]+.[0-9]+
+    branches:
+      - main
 
 jobs:
-  create-release:
-    name: Create Release
+  test:
+    name: test workflow
     runs-on: ubuntu-latest
-    # only run for tags on main branch
-    if: github.ref == 'refs/heads/main'
     steps:
-      - name: run
-        run: echo "Creating release for tag ${{ github.ref_name }}"
+      - id: set-variables
+        name: Set Output Variable
+        run: |
+          MY_VAR="my-var"
+          echo "var: $MY_VAR"
+          echo "my_var=$MY_VAR" >> $GITHUB_OUTPUT
+      - name: Use Output
+        env:
+          MY_VAR: ${{ steps.set-variables.output.my_var }}
+        run: |
+          echo "steps.set-variables.output.my_var: ${{ steps.set-variables.output.my_var }}"
+          echo "MY_VAR: $MY_VAR"
+
 
