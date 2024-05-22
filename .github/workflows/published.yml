@@ -8,17 +8,12 @@ jobs:
     name: test workflow
     runs-on: ubuntu-latest
     steps:
-      - id: set-variables
-        name: Set Output Variable
-        run: |
-          MY_VAR="my-var"
-          echo "var: $MY_VAR"
-          echo "my_var=$MY_VAR" >> $GITHUB_OUTPUT
-      - name: Use Output
+      - name: Set color
+        id: color-selector
+        run: echo "SELECTED_COLOR=green" >> "$GITHUB_OUTPUT"
+      - name: Get color
         env:
-          MY_VAR: ${{ steps.set-variables.output.my_var }}
-        run: |
-          echo "steps.set-variables.output.my_var: ${{ steps.set-variables.output.my_var }}"
-          echo "MY_VAR: $MY_VAR"
+          SELECTED_COLOR: ${{ steps.color-selector.outputs.SELECTED_COLOR }}
+        run: echo "The selected color is $SELECTED_COLOR"
 
 
